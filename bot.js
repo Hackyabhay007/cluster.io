@@ -1,19 +1,44 @@
-const { Telegraf } = require('telegraf');
-const { BOT_TOKEN } = require('./config');
-const { startHandler, helpHandler, webAppDataHandler } = require('./handlers');
+const config = require('./config.js');
+const TelegramBot = require('node-telegram-bot-api');
+const bot = new TelegramBot(config.BOT_TOKEN, {polling: true});
 
-const bot = new Telegraf(BOT_TOKEN);
+bot.onText(/\/start/, (msg) => {
+    const chatId = msg.chat.id;
+    const username = msg.from.first_name;
+    
+    const welcomeMessage = `Hello ${username}! 👋`;
+    const description = `Welcome to Cluster Protocol 🚀
 
-bot.start(startHandler);
-bot.help(helpHandler);
-bot.on('web_app_data', webAppDataHandler);
+The next generation of DeFi trading:
 
-bot.launch().then(() => {
-  console.log('Bot started successfully');
-}).catch(err => {
-  console.error('Error starting bot:', err);
+✨ Simple & Efficient Trading
+🔄 Cross-chain Transactions
+🛡️ Maximum Security`;
+
+    const keyboard = {
+        inline_keyboard: [
+            [{
+                text: '▶️ Launch ClusterProto',
+                web_app: {
+                    url: config.WEB_APP_URL
+                }
+            }]
+        ]
+    };
+
+    // Send photo with combined welcome message and description
+    bot.sendPhoto(chatId, 
+        './img.png',  // Local image path
+        {
+            caption: `${welcomeMessage}\n\n${description}`,
+            parse_mode: 'HTML',
+            reply_markup: keyboard
+        }
+    );
 });
 
-// Enable graceful stop
-process.once('SIGINT', () => bot.stop('SIGINT'));
-process.once('SIGTERM', () => bot.stop('SIGTERM'));
+bot.on('polling_error', (error) => {
+    console.log(error);
+});
+
+console.log('Bot is running...');
